@@ -1,0 +1,22 @@
+# OS files
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+backend/.venv/
+
+# Environment files
+.env
+backend/.env
+
+# Node / frontend artifacts
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Model weights and large archives (GitHub >100MB limit)
+*.safetensors
+best_model.zip
