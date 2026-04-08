@@ -1,6 +1,0 @@
-# File: .gitignore
-.env
-__pycache__/
-venv/
-.venv/
-env/
