@@ -1,0 +1,79 @@
+# =============================================================================
+# Backend build context — phai nho: Windows + Docker hay loi
+# "archive/tar: unknown file mode" neu context chua venv/ hoac node_modules
+# (symlink / reparse point). Giu context < vai chuc MB.
+# =============================================================================
+
+# Virtual env tren may host (rat lon, ~GB neu co torch) — TUYET DOI loai
+venv/
+.venv/
+env/
+ENV/
+
+# Next.js — node_modules + symlink .bin
+web/
+
+# Streamlit legacy (khong can trong image API)
+frontend/
+
+# Git / IDE / Cursor
+.git/
+.github/
+.cursor/
+.idea/
+.vscode/
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Bat ky node_modules o dau trong repo
+node_modules/
+**/node_modules/
+
+# Env files (khong dua secret vao image)
+.env
+.env.local
+.env.development.local
+.env.production.local
+
+# Test / lint / type-check
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+tests/
+
+# ML / data / logs (khong can trong image build)
+mlruns/
+artifacts/
+checkpoints/
+logs/
+datasets/
+models/
+*.db
+*.pt
+*.bin
+*.onnx
+*.safetensors
+*.h5
+*.ckpt
+
+# OS / misc
+Thumbs.db
+.DS_Store
+*.swp
+.ipynb_checkpoints/
+
+# Docker
+docker-compose.override.yml
+
+# Git metadata (neu bo .git o tren thi dong nay du phong)
+.gitignore

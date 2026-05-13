@@ -1,22 +1,75 @@
-# OS files
-.DS_Store
-
-# Python
+# Python bytecode / cache
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
 .venv/
 venv/
-backend/.venv/
+env/
 
 # Environment files
 .env
-backend/.env
+.env.local
+.env.*.local
 
-# Node / frontend artifacts
-frontend/node_modules/
-frontend/dist/
-*.tsbuildinfo
+# Build / packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
 
-# Model weights and large archives (GitHub >100MB limit)
-*.safetensors
-best_model.zip
+# Test / lint / type-check caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# MLflow / ML artifacts
+mlruns/
+artifacts/
+checkpoints/
+*.pt
+*.bin
+*.onnx
+
+# Data folders (runtime/generated data)
+datasets/raw/
+datasets/interim/
+datasets/processed/
+
+# Local DB / runtime data
+*.db
+pg_data/
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Optional: keep folder structure but ignore contents
+models/*
+!models/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# .cursor
+.cursor/
+
+# Hugging Face cache (không commit)
+models--*/
+CACHEDIR.TAG

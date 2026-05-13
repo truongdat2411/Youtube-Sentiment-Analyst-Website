@@ -1,3 +1,7 @@
+# Dependencies cho image Docker backend (API).
+# PyTorch CPU duoc cai rieng trong Dockerfile (index download.pytorch.org/whl/cpu)
+# de tranh ban CUDA + cudnn hang GB tu PyPI (de gay pip exit code 2: het d dia / timeout).
+
 fastapi
 uvicorn[standard]
 python-jose[cryptography]
@@ -12,11 +16,6 @@ python-dotenv
 google-api-python-client
 tenacity
 transformers
-torch
 mlflow==2.13.0
-streamlit
 httpx
 pandas
-plotly
-pytest
-pytest-asyncio

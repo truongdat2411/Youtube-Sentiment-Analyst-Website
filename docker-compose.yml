@@ -1,18 +1,96 @@
-version: "3.9"
-
 services:
-  postgres:
-    image: postgres:16
-    container_name: web_sentiment_postgres
-    restart: unless-stopped
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yt-sentiment-backend
     environment:
-      POSTGRES_DB: web_sentiment
+      APP_NAME: ${APP_NAME:-YouTube Comment Sentiment Analysis}
+      APP_ENV: ${APP_ENV:-development}
+      APP_PORT: ${APP_PORT:-8000}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@db:5432/youtube_sentiment}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
+      YOUTUBE_API_SERVICE_NAME: ${YOUTUBE_API_SERVICE_NAME:-youtube}
+      YOUTUBE_API_VERSION: ${YOUTUBE_API_VERSION:-v3}
+      YOUTUBE_MAX_RESULTS_PER_PAGE: ${YOUTUBE_MAX_RESULTS_PER_PAGE:-100}
+      YOUTUBE_MAX_COMMENTS: ${YOUTUBE_MAX_COMMENTS:-500}
+      MLFLOW_TRACKING_URI: ${MLFLOW_TRACKING_URI:-http://mlflow:5000}
+      MLFLOW_EXPERIMENT_NAME: ${MLFLOW_EXPERIMENT_NAME:-youtube-comment-sentiment}
+      MLFLOW_REGISTERED_MODEL_NAME: ${MLFLOW_REGISTERED_MODEL_NAME:-sentiment-model}
+      MODEL_NAME: ${MODEL_NAME:-wonrax/phobert-base-vietnamese-sentiment}
+      MODEL_VERSION: ${MODEL_VERSION:-sentiment-model-v1}
+      MODEL_MAX_LENGTH: ${MODEL_MAX_LENGTH:-256}
+      INFERENCE_BATCH_SIZE: ${INFERENCE_BATCH_SIZE:-16}
+      MODEL_CACHE_DIR: ${MODEL_CACHE_DIR:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-development-only}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-10080}
+      GIT_PYTHON_REFRESH: ${GIT_PYTHON_REFRESH:-quiet}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+    command: sh -c "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    volumes:
+      - ./:/app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+  web:
+    # Debian slim (glibc) on dinh hon Alpine voi Next.js / native deps; lang nghe 0.0.0.0 de map cong Docker.
+    image: node:22-bookworm-slim
+    container_name: yt-sentiment-web
+    working_dir: /app
+    volumes:
+      - ./web:/app
+    ports:
+      - "3000:3000"
+    environment:
+      # Next rewrite: trinh duyet -> /api/... -> backend (tranh CORS / Failed to fetch khi mo bang IP).
+      API_PROXY_TARGET: ${API_PROXY_TARGET:-http://backend:8000}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-/api/v1}
+      WATCHPACK_POLLING: "true"
+    # Khoi dong sau khi backend container chay (khong cho healthy) de tranh web khong bao gio mo cong 3000 neu API healthy cham/loi.
+    command: bash -c "npm install && exec npx next dev -H 0.0.0.0 -p 3000"
+    depends_on:
+      backend:
+        condition: service_started
+
+  db:
+    image: postgres:16
+    container_name: yt-sentiment-db
+    environment:
+      POSTGRES_DB: youtube_sentiment
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d youtube_sentiment"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Giu trung major/minor voi mlflow trong requirements*.txt (client 3.x + server 2.x -> 404 /api/.../logged-models).
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.13.0
+    container_name: yt-sentiment-mlflow
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
 
 volumes:
-  postgres_data:
+  pg_data:
+  mlflow_data:
